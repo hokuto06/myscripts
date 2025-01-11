@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append('/home/hokuto/devicescontroller/mainController')
+# sys.path.append('/home/hokuto/devicescontroller/mainController')
 from vszApi import connectVsz
 from pymongo import MongoClient
 import pandas as pd
@@ -36,7 +36,7 @@ def get_devices_from_vsz_single():
 
     pprint(aps)
 
-# get_devices_from_vsz_single()
+get_devices_from_vsz_single()
 
 def read_from_excel():
     archivo_excel = 'aps_ibis.xlsx'
@@ -56,7 +56,7 @@ def read_from_excel():
         vsz.config_full_ap(fila[1],fila[0], "ASD", "255.255.255.0", "10.9.21.1", "Hab ")
         # break 
 
-read_from_excel()
+# read_from_excel()
 
 def read_excel():
     archivo_excel = 'aps_ibis.xlsx'
