@@ -6,9 +6,10 @@ from pymongo import MongoClient
 import pandas as pd
 from pprint import pprint
 from openpyxl import load_workbook
+from tabulate import tabulate
 client = MongoClient("mongodb://localhost:27017/")  # Asegúrate de que MongoDB esté corriendo
 db = client["vsz_db"]  # Nombre de tu base de datos
-collection = db["devices"]  # Colección donde guardarás los dispositivos
+collection = db["vsz_devices"]  # Colección donde guardarás los dispositivos
 db_controller = client["prueba"]
 controller_collection = db_controller["mainController_devices"]
 
@@ -17,7 +18,7 @@ def save_devices_on_vsz(aps):
         collection.insert_many(aps)
 
 def get_devices_from_vsz():
-    vsz = connectVsz('ruckus1.gocloud1.com')
+    vsz = connectVsz('192.168.188.10')
 
     aps = vsz.get_all_devices('test')
     
@@ -34,7 +35,8 @@ def get_devices_from_vsz_single():
     
     # save_devices_on_vsz(aps)
 
-    pprint(aps)
+    print(tabulate(aps))
+    # pprint(aps)
 
 get_devices_from_vsz_single()
 
