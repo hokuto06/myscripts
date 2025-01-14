@@ -1,16 +1,43 @@
 import RuckusVirtualSmartZoneAPIClient
 import json
 from pprint import pprint
+from datetime import datetime
+
+
 
 class connectVsz():
     def __init__(self, vsz_ip):
+        self.current_time = datetime.now()
         try:
             client = RuckusVirtualSmartZoneAPIClient.Client()
             client.connect(url='https://'+vsz_ip+':8443', username='admin', password='elrbsestNF!25')
             # client.connect(url='https://192.168.188.10:8443', username='admin', password='elrbsestNF!25')
             self.client = client
+            # print(dir(self.client))
             # self.mac_address = mac_address
             self.status = 1
+            # self.zones = get_zones()
+            # zones = self.client.get(method='/rkszones')
+            # zones_response = zones.json()
+            # print(zones_response)
+            # self.zones_dict = {zone["id"]: zone["name"] for zone in zones_response["list"]}
+            # print(self.zones_dict)
+            # print(self.zones_dict['e77fed82-1968-467c-9f82-57d41d51f0fb'])
+            # self.apgroups = {}
+            # # Iterar sobre cada zona
+            # for id in zones_response["list"]:
+            #     if self.zones_dict[id["id"]] != "Staging Zone":  # Excluir "Staging Zone"
+            #         _id = id["id"]
+                    
+            #         # Consultar los grupos de la zona
+            #         groups = self.client.get(method='/rkszones/'+_id+'/apgroups')
+            #         groups_response = groups.json()
+                    
+            #         # Actualizar el diccionario de grupos para esta zona
+            #         for group in groups_response["list"]:
+            #             self.apgroups[group["id"]] = group["name"]  # Guardar grupo en apgroups
+
+            # print(self.apgroups)
         except Exception as e:
             print(e)
  
@@ -22,6 +49,15 @@ class connectVsz():
  
     #cambia nombre de dispositivo.
  
+    # def get_zones(self):
+    #     zones = self.client.get(method='/rkszones')
+    #     #/e77fed82-1968-467c-9f82-57d41d51f0fb/apgroups
+    #     # zone_data = [{"zoneId": zone["id"], "zoneName": zone["name"]} for zone in zones["list"]]
+    #     # print(zone_data)
+    #     zones_response = json.dumps(zones.json(), indent=4)
+    #     zones_dict = {zone["id"]: zone["name"] for zone in zones_response["list"]}
+    #     return zones_dict
+
 
     def get_ap_info(self, mac_address):
         response = self.client.get(method='/aps/'+mac_address)
@@ -37,33 +73,33 @@ class connectVsz():
             return('ok')
         else:
             return('no')
-    def get_all_devices_single(self, apGroup):
-        response = self.client.get(method='/aps/', data={'zone_id': 'a92aa2ff-de24-4ef8-aa54-8a672af846e2'})
+    def get_all_devices_single(self):
+        # response = self.client.get(method='/aps/', data={'zone_id': 'a92aa2ff-de24-4ef8-aa54-8a672af846e2'})
+        response = self.client.get(method='/aps/')
         if response.status_code == 200:
             results = (response.json())
             list_devices = []
             return results
 
     def get_all_devices(self, apGroup):
-        # response = self.client.get_aps(group_id="NOVOTEL_IBIS_OBELISCO")
-        response = self.client.get(method='/aps/', DeprecationWarning={'group_id': 'NOVOTEL_IBIS_OBELISCO'})
+        response = self.client.get(method='/aps/')
         if response.status_code == 200:
             results = (response.json())
             list_devices = []
             for ap in results['list']:
                 json_info_ap = self.client.get(method='/aps/'+ap['mac'])
                 info_ap = (json_info_ap.json())
-                # print("mac: "+info_ap['mac']+" ip: "+info_ap['network']['ipType'])
-                # ip_device = info_ap['network']['ip'] if info_ap['network']['ipType'] == 'static' else 'None'
-                list_devices.append({"mac":info_ap['mac'],
-                                    "name":info_ap['name'],
+                list_devices.append({"mac":ap['mac'],
+                                    "name":info_ap.get('name','none'),
                                     "model":info_ap['model'],
                                     "serial":info_ap['serial'],
-                                    "zoneId":info_ap['zoneId'],
-                                    "zoneId":info_ap['apGroupId'],
-                                    "description":info_ap['description'],
-                                    "ip_device": info_ap['network'].get('ip', 'None')
+                                    "zoneId":ap['zoneId'],
+                                    "apGroupId":ap['apGroupId'],
+                                    "description":info_ap.get('description','none'),
+                                    "ip_device": info_ap['network'].get('ip', 'None'),
+                                    "lastConection":self.current_time,
                 })
+                print(list_devices)
             return list_devices
 
     def config_full_ap(self,mac_address,hostname, ip_address, ap_netmask, ap_gateway, description):

@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 import json
 import os
+from pprint import pprint
 
 def saveOnExcel(rows):
     df = pd.DataFrame(rows)
@@ -48,6 +49,50 @@ def get_controller_instance():
         userController=config["username"],
         passwordController=config["password"]
     )
+
+def get_tags():
+    controller = get_controller_instance()
+    tags = controller.get_tags()
+    pprint(tags)
+
+def update_tags_in_excel():
+    # Cargar el archivo Excel con las MACs
+    file_path = "devices_output.xlsx"
+    try:
+        df = pd.read_excel(file_path, engine="openpyxl")
+    except Exception as e:
+        print(f"Error al leer el archivo Excel: {e}")
+        return
+
+    # Verificar que el archivo contenga la columna de MACs
+    if "MAC" not in df.columns:
+        print("El archivo Excel no contiene una columna 'MAC'.")
+        return
+
+    # Obtener los tags del controlador
+    controller = get_controller_instance()
+    tags = controller.get_tags()
+    if not tags:
+        print("No se pudieron obtener los tags del controlador.")
+        return
+
+    # Crear un diccionario para buscar rápidamente tags por MAC
+    mac_to_tag = {}
+    for tag in tags:
+        for mac in tag.get("MACs", []):
+            mac_to_tag[mac] = tag.get("Name", "N/A")
+
+    # Actualizar la columna 8 (índice 7) con los tags correspondientes
+    df["Tag"] = df["MAC"].map(mac_to_tag).fillna("Sin Tag")
+
+    # Guardar el archivo actualizado
+    output_file = "devices_output_with_tags.xlsx"
+    try:
+        df.to_excel(output_file, index=False, engine="openpyxl")
+        print(f"Archivo actualizado guardado como {output_file}")
+    except Exception as e:
+        print(f"Error al guardar el archivo Excel: {e}")
+
 
 def handle_get():
     """Maneja la operación de obtención de dispositivos."""
@@ -121,6 +166,7 @@ def main():
     parser = argparse.ArgumentParser(description="Script para gestionar dispositivos UniFi.")
     parser.add_argument("--tag", action="store_true", help="Intentar modificar tags.")
     parser.add_argument("--get", action="store_true", help="Obtener lista de dispositivos del controlador.")
+    parser.add_argument("--gettags", action="store_true", help="Obtener lista de tags del controlador.")
     parser.add_argument("--set", action="store_true", help="Configurar dispositivos usando un archivo Excel.")
     # parser.add_argument("--set", type=str, metavar="FILE", help="Configurar dispositivos usando un archivo Excel.")
     parser.add_argument("--conc", action="store_true", help="Concatenar columnas de un archivo Excel.")
@@ -135,6 +181,9 @@ def main():
 
     elif args.tag:
         test_tags()
+
+    elif args.gettags:
+        update_tags_in_excel()
 
     elif args.set:
         handle_set()

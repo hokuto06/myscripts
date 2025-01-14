@@ -9,7 +9,7 @@ class UnifiApiController:
     def __init__(self, ipController="172.20.197.148", port="8443", userController="rsupport", passwordController="elrbsestNF!25" ):
         controller_url = "https://"+ipController+":"+port+"/api/login"
         self.controller_url = controller_url
-        self.controller_url_api = "https://"+ipController+":"+port+"/api/s/etw7f5dj"
+        self.controller_url_api = "https://"+ipController+":"+port+"/api/s/default"
         payload = {"username": userController, "password": passwordController}
         self.session = requests.Session()
         login_response = self.session.post(controller_url, headers={"Accept":"application/json","Content-Type":"application/json"}, data=json.dumps(payload), verify=False)
@@ -105,3 +105,32 @@ class UnifiApiController:
             print(f"ID del Tag: {tag_data.get('_id', 'No disponible')}")
         else:
             print(f"Error al crear el tag: {response.status_code} - {response.text}")
+
+
+    def get_tags(self):
+        # Endpoint para obtener los tags del sitio default
+        tags_url = f"{self.controller_url_api}/rest/tag"
+
+        try:
+            # Realizar una solicitud GET para obtener los tags
+            response = self.session.get(tags_url, verify=False)
+
+            if response.status_code == 200:
+                tags_data = response.json().get("data", [])  # Obtener los datos de los tags
+
+                tags_info = []
+                for tag in tags_data:
+                    tags_info.append({
+                        "ID": tag.get("_id", "N/A"),
+                        "Name": tag.get("name", "N/A"),
+                        "MACs": tag.get("member_table", [])  # Lista de MACs asociadas al tag
+                    })
+
+                pprint(tags_info)
+                return tags_info
+            else:
+                print(f"Error al obtener los tags: {response.status_code} - {response.text}")
+                return None
+        except Exception as e:
+            print(f"Excepción al obtener los tags: {e}")
+            return None
