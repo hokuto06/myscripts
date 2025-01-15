@@ -32,10 +32,11 @@ class UnifiApiController:
             last_uplink = device.get("last_uplink", {})
             uplink_mac = last_uplink.get("uplink_mac", "N/A")
             uplink_port = last_uplink.get("uplink_remote_port", "N/A")
-            
+            is_online = device.get("state", 0) == 1 
             rows.append({
                 "ID": device.get("_id", "N/A"),
                 "MAC": device.get("mac", "N/A"),
+                "ONLINE": is_online, 
                 "NAME": device.get("name", "N/A"),
                 "MODEL": device.get("model", "N/A"),
                 "IP": device.get("ip", "N/A"),
