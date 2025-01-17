@@ -15,6 +15,11 @@ db_controller = client["prueba"]
 controller_collection = db_controller["mainController_devices"]
 vsz = connectVsz("192.168.188.10")
 
+def set_ap_on_vsz():
+    vsz.config_ap('3C:46:A1:2B:14:70', device_description="prueba")
+
+set_ap_on_vsz()
+
 def save_devices_on_vsz(aps):
     if aps:
         collection.insert_many(aps)
@@ -49,7 +54,7 @@ def get_devices_from_vsz_single():
     # pprint(aps)
 
 #
-get_devices_from_vsz_single()
+# get_devices_from_vsz_single()
 
 def get_simple_devices():
     aps = vsz.get_all_devices_single()

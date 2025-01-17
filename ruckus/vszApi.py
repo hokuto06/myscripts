@@ -11,53 +11,20 @@ class connectVsz():
         try:
             client = RuckusVirtualSmartZoneAPIClient.Client()
             client.connect(url='https://'+vsz_ip+':8443', username='admin', password='elrbsestNF!25')
-            # client.connect(url='https://192.168.188.10:8443', username='admin', password='elrbsestNF!25')
             self.client = client
-            # print(dir(self.client))
-            # self.mac_address = mac_address
             self.status = 1
-            # self.zones = get_zones()
-            # zones = self.client.get(method='/rkszones')
-            # zones_response = zones.json()
-            # print(zones_response)
-            # self.zones_dict = {zone["id"]: zone["name"] for zone in zones_response["list"]}
-            # print(self.zones_dict)
-            # print(self.zones_dict['e77fed82-1968-467c-9f82-57d41d51f0fb'])
-            # self.apgroups = {}
-            # # Iterar sobre cada zona
-            # for id in zones_response["list"]:
-            #     if self.zones_dict[id["id"]] != "Staging Zone":  # Excluir "Staging Zone"
-            #         _id = id["id"]
-                    
-            #         # Consultar los grupos de la zona
-            #         groups = self.client.get(method='/rkszones/'+_id+'/apgroups')
-            #         groups_response = groups.json()
-                    
-            #         # Actualizar el diccionario de grupos para esta zona
-            #         for group in groups_response["list"]:
-            #             self.apgroups[group["id"]] = group["name"]  # Guardar grupo en apgroups
-
-            # print(self.apgroups)
         except Exception as e:
             print(e)
- 
-    # response = client.get(method='/rkszones')
-    # print(json.dumps(response.json(), indent=4))
- 
-    # response = client.get(method='/rkszones/28b9296d-7dc9-44d9-9221-80a926f1f4a0')
-    # response = client.get(method='/rkszones/28b9296d-7dc9-44d9-9221-80a926f1f4a0/apgroups/4066127f-a6ed-4a26-8951-dab89c95d216')
- 
-    #cambia nombre de dispositivo.
- 
-    # def get_zones(self):
-    #     zones = self.client.get(method='/rkszones')
-    #     #/e77fed82-1968-467c-9f82-57d41d51f0fb/apgroups
-    #     # zone_data = [{"zoneId": zone["id"], "zoneName": zone["name"]} for zone in zones["list"]]
-    #     # print(zone_data)
-    #     zones_response = json.dumps(zones.json(), indent=4)
-    #     zones_dict = {zone["id"]: zone["name"] for zone in zones_response["list"]}
-    #     return zones_dict
 
+ 
+    def get_zones(self):
+        zones = self.client.get(method='/rkszones')
+        #/e77fed82-1968-467c-9f82-57d41d51f0fb/apgroups
+        # zone_data = [{"zoneId": zone["id"], "zoneName": zone["name"]} for zone in zones["list"]]
+        # print(zone_data)
+        zones_response = json.dumps(zones.json(), indent=4)
+        zones_dict = {zone["id"]: zone["name"] for zone in zones_response["list"]}
+        return zones_dict
 
     def get_ap_info(self, mac_address):
         response = self.client.get(method='/aps/'+mac_address)
@@ -101,46 +68,44 @@ class connectVsz():
                 })
                 print(list_devices)
             return list_devices
+        
 
-    def config_full_ap(self,mac_address,hostname, ip_address, ap_netmask, ap_gateway, description):
-        # response = {"name":hostname,"descripcion":description,"mac_address":mac_address,"network":{"ip":ip_address}}
-        print('mac address: '+mac_address)
-        print('ip address: '+ip_address)
- 
-        response = self.client.put(method=f'/aps/'+mac_address, data={ "name":hostname
-                                                                    #   "description":description,
-                                                                    #   "network":{
-                                                                    #     "ipType": "Static",
-                                                                    #     "ip": ip_address,
-                                                                    #     "netmask": ap_netmask,
-                                                                    #     "gateway": ap_gateway,
-                                                                    #     "primaryDns": ap_gateway
-                                                                    #   }                                                               
-                                                                })
-        print(response)
+    def config_ap(self,mac_address, device_name=None, device_ip=None, device_netmask=None, device_gateway=None, device_dns=None, device_description=None):
 
-    def config_ap(self,mac_address,hostname, ip_address, description):
-        # response = {"name":hostname,"descripcion":description,"mac_address":mac_address,"network":{"ip":ip_address}}
-        print('mac address: '+mac_address)
-        print('ip address: '+ip_address)
- 
-        response = self.client.put(method=f'/aps/'+mac_address, data={ "name":hostname,
-                                                                      "description":description,
-                                                                      "network":{
-                                                                        "ipType": "Static",
-                                                                        "ip": ip_address,
-                                                                        "netmask": "255.255.252.0",
-                                                                        "gateway": "192.168.188.1",
-                                                                        "primaryDns": "192.168.188.1"
-                                                                      },
-                                                                        "apMgmtVlan": {
-                                                                            "id": 100,
-                                                                            "mode": "USER_DEFINED"
-                                                                         }
-                                                                })
-        print(response)
-        # results = (json.dumps(response.json(), indent=4))
-        # print(results)
- 
+        update_payload = {}
+        
+        if device_name:
+            update_payload["name"] = device_name
+
+        if device_description:
+            update_payload["description"] = device_description
+
+        if device_ip:
+            if not (device_netmask and device_gateway and device_dns):
+                print("Error: Para actualizar la IP, debes proporcionar la netmask, gateway y DNS.")
+                return None
+            update_payload["network"] = {
+                "ipType": "static",
+                "ip": device_ip,
+                "netmask": device_netmask,
+                "gateway": device_gateway,
+                "primaryDns": device_dns
+            }
+            update_payload["apMgmtVlan"] = {
+                "id": 100,
+                "mode": "USER_DEFINED"
+            }
+        if not update_payload:
+            print("Error: Debes proporcionar al menos un parámetro para actualizar (IP o nombre).")
+            return None        
+        try:
+            response = self.client.put(method=f'/aps/'+mac_address, data=update_payload)
+
+        except Exception as e:
+            print(f"Excepción durante la configuración del dispositivo: {e}")
+            return None
+
+        print(response) 
+
     def desconnect(self):
         self.client.disconnect()
