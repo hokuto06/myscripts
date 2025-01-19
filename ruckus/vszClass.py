@@ -6,11 +6,11 @@ from datetime import datetime
 
 
 class connectVsz():
-    def __init__(self, vsz_ip):
+    def __init__(self, ipController, userController='admin', passwordController='elrbsestNF!25'):
         self.current_time = datetime.now()
         try:
             client = RuckusVirtualSmartZoneAPIClient.Client()
-            client.connect(url='https://'+vsz_ip+':8443', username='admin', password='elrbsestNF!25')
+            client.connect(url='https://'+ipController+':8443', username=userController, password=passwordController)
             self.client = client
             self.status = 1
         except Exception as e:
@@ -84,8 +84,9 @@ class connectVsz():
             if not (device_netmask and device_gateway and device_dns):
                 print("Error: Para actualizar la IP, debes proporcionar la netmask, gateway y DNS.")
                 return None
+            print(mac_address, device_ip, device_netmask, device_gateway, device_dns)
             update_payload["network"] = {
-                "ipType": "static",
+                "ipType": "Static",
                 "ip": device_ip,
                 "netmask": device_netmask,
                 "gateway": device_gateway,
@@ -98,8 +99,9 @@ class connectVsz():
         if not update_payload:
             print("Error: Debes proporcionar al menos un parámetro para actualizar (IP o nombre).")
             return None        
+        pprint(update_payload)
         try:
-            response = self.client.put(method=f'/aps/'+mac_address, data=update_payload)
+            response = self.client.put(method='/aps/'+mac_address, data=update_payload)
 
         except Exception as e:
             print(f"Excepción durante la configuración del dispositivo: {e}")
