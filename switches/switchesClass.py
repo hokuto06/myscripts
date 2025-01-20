@@ -57,9 +57,9 @@ class ArubaSwitch(Switch):
             host=self.ip,
             username=self.username,
             password=self.password,
-            global_delay_factor=2  # Aumentar tiempo entre comandos
+            global_delay_factor=2
         )
-        # Leer el banner completo y manejar "Press any key to continue"
+        # Manejo del mensaje inicial
         output = self.connection.read_channel()
         if "Press any key to continue" in output:
             self.connection.write_channel("\n")
@@ -72,14 +72,16 @@ class ArubaSwitch(Switch):
         output = self.connection.send_command('sh lldp info remote-device')
         data = []
         for line in output.splitlines():
-            match = re.match(r'\s*(\d+)\s+\|\s+([\da-f\s]+)\s+([\da-f\s]+)\s+\S+\s+(\S+)?', line)
-            if match:
-                local_port, chassis_id, port_id, sys_name = match.groups()
-                mac_address = chassis_id.replace(' ', '').upper()
-                mac_address = ':'.join(mac_address[i:i+2] for i in range(0, len(mac_address), 2))
-                sys_name = sys_name if sys_name else "Unknown"
-                data.append([self.hostname, mac_address, f"Port {local_port}", sys_name])
+            # Separar la línea por divisores (| o espacios dobles)
+            parts = re.split(r'\s{2,}|\s+\|\s+', line.strip())
+            if len(parts) >= 5:  # Asegurar que la línea tiene al menos los campos necesarios
+                local_port = parts[0]
+                port_id = parts[2].replace(' ', ':').upper()  # Convertir separador de espacios a ":"
+                sys_name = parts[4] if len(parts) > 4 else "Unknown"
+                data.append([self.hostname, port_id, local_port, sys_name])
+        print(data)
         return data
+
 
 
 class BrocadeSwitch(Switch):
