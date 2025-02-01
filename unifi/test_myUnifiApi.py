@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 from pprint import pprint
+import ipaddress
 
 def saveOnExcel(rows):
     df = pd.DataFrame(rows)
@@ -105,14 +106,14 @@ def test_tags():
     controller = get_controller_instance()
     controller.setDeviceTag()
 
+
 def handle_set():
-    file = "buetxsw.xlsx"
-    # Parámetros predeterminados
-    default_netmask = "255.255.255.0"
-    default_gateway = "192.168.222.1"
-    default_dns = "192.168.222.1"
+    file = "setupfile.xlsx"
 
     controller = get_controller_instance()
+
+    devices = controller.getDevices()
+    devices_dict = {device["MAC"]: device["ID"] for device in devices}
 
     try:
         # Leer el archivo Excel sin encabezados
@@ -123,27 +124,74 @@ def handle_set():
         if max(required_indices) >= df.shape[1]:
             print(f"Error: El archivo debe contener al menos {max(required_indices) + 1} columnas.")
             return
+        print('''
+╔══════════════════════════════════════════════╗
+║              Formato del Excel               ║
+╠══════════════════════════════════════════════╣
+║ Nombre de la planilla: setupfile.xlsx        ║
+║                                              ║
+║ Columnas:                                    ║
+║     A = MAC                                  ║
+║     B = IP                                   ║
+║     C = NAME                                 ║
+║     D = DESCRIPTION                          ║
+╚══════════════════════════════════════════════╝
+        ''')
+        modify_ip = input("¿Configurar IP? (y/n): ").strip().lower() == 'y'
+        if modify_ip:
+            try:
+                device_netmask = input("Ingrese el netmask: ").strip()
+                device_gateway = input("Ingrese el gateway: ").strip()
+                device_dns = input("Ingrese el DNS: ").strip()
+
+                # Validar que todos los parámetros sean ingresados
+                if not device_netmask or not device_gateway or not device_dns:
+                    raise ValueError("Todos los parámetros (netmask, gateway, DNS) son obligatorios.")
+
+                # Validar formato de gateway, DNS e IP netmask
+                try:
+                    ipaddress.IPv4Address(device_gateway)
+                    ipaddress.IPv4Address(device_dns)
+                    ipaddress.IPv4Network(f"0.0.0.0/{device_netmask}")  # Validar máscara
+                except (ipaddress.AddressValueError, ipaddress.NetmaskValueError):
+                    raise ValueError("Formato inválido en gateway, DNS o máscara de red.")
+
+            except ValueError as e:
+                print(f"Error: {e}")
+                print("El script se cancela debido a parámetros inválidos.")
+                exit(1)
+
+
+        modify_name = input("¿Configurar NAME? (y/n): ").strip().lower() == 'y'
+        # modify_description = input("¿Configurar DESCRIPTION? (y/n): ").strip().lower() == 'y'
 
         # Iterar por cada fila del archivo Excel
         for index, row in df.iterrows():
-            device_id = row[0]  # Columna A (índice 0)
-            # device_ip = row[4]  # Columna E (índice 4)
-            device_name = row[1]  # Columna L (índice 10)
+            device_id = devices_dict.get(row[0])
+            # device_id = row[0]
+            device_ip = row[1] 
+            device_name = row[2] 
 
             # Validar que los datos necesarios no estén vacíos
             if pd.isna(device_id) or pd.isna(device_id) or pd.isna(device_name):
                 print(f"Fila {index + 1}: Datos incompletos. Saltando esta fila.")
                 continue
-
+            print(f"\nConfigurando dispositivo MAC: {device_id}")
+            if modify_ip and device_ip:
+                print(f"  -> Configurando IP: {device_ip}")
+                print(f"     Netmask: {device_netmask}, Gateway: {device_gateway}, DNS: {device_dns}")
+            if modify_name and device_name:
+                print(f"  -> Configurando Name: {device_name}")
+        
             # Configurar el dispositivo
             print(f"Configurando dispositivo ID: {device_id}, Nombre: {device_name}")
             controller.setupDevice(
                 device_id=device_id,
-                device_name=device_name,
-                # device_ip=device_ip,
-                # device_netmask=default_netmask,
-                # device_gateway=default_gateway,
-                # device_dns=default_dns
+                device_name=device_name if modify_name else None,
+                device_ip=device_ip if modify_ip else None,
+                device_netmask=device_netmask if modify_ip else None,
+                device_gateway=device_gateway if modify_ip else None,
+                device_dns=device_dns if modify_ip else None
             )
 
     except Exception as e:
