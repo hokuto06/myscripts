@@ -7,10 +7,10 @@ Docker Compose stack que levanta **todos mis sitios en producción**
 
 | Servicio | Tech | Rol | Carpeta |
 |----------|------|-----|---------|
-| **excel** | Nginx 1.27 | Reverse-proxy HTTPS + servir estáticos | [`/excel`](nginx) |
-| **ruckus** | Django 4 + DRF | Backend /admin + REST para el blog | [`/ruckus`](django-api) |
-| **switches** | python | scrips para setear switches | [`/switches`](django_blog_front) |
-| **excel** | python | scripts para procesar planillas | [`/excel`](app) |
+| **excel** | Nginx 1.27 | Reverse-proxy HTTPS + servir estáticos | [`/excel`](excel) |
+| **ruckus** | Django 4 + DRF | Backend /admin + REST para el blog | [`/ruckus`](ruckus) |
+| **switches** | python | scrips para setear switches | [`/switches`](switches) |
+| **excel** | python | scripts para procesar planillas | [`/excel`](excel) |
 
 > **Nota**: la antigua carpeta `php/` quedó fuera del repositorio (solo vive en mi server).
 
