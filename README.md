@@ -7,11 +7,11 @@ Docker Compose stack que levanta **todos mis sitios en producción**
 
 | Servicio | Tech | Rol | Carpeta |
 |----------|------|-----|---------|
-| **excel** | Nginx 1.27 | Reverse-proxy HTTPS + servir estáticos | [`/excel`](excel) |
-| **ruckus** | Django 4 + DRF | Backend /admin + REST para el blog | [`/ruckus`](ruckus) |
+| **excel** | python | Scripts para procesar planillas | [`/excel`](excel) |
+| **ruckus** | python | Scripts para consumir api ruckus y administrar devices | [`/ruckus`](ruckus) |
 | **switches** | python | scrips para setear switches | [`/switches`](switches) |
-| **excel** | python | scripts para procesar planillas | [`/excel`](excel) |
+| **unifi** | python | scripts para consumir api de Unifi controller | [`/unifi`](unifi) |
 
-> **Nota**: la antigua carpeta `php/` quedó fuera del repositorio (solo vive en mi server).
+> **Nota**: Mantengo estos archivos como documentación de mi ruta de aprendizaje.
 
 ---
